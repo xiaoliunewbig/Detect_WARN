@@ -10,14 +10,10 @@
 #include <condition_variable>
 
 #include "config.hpp"
-#include "video_processor.hpp"
-#include "object_detector.hpp"
-#include "object_tracker.hpp"
-#include "behavior_analyzer.hpp"
-#include "result_processor.hpp"
-#include "llm_enhancer.hpp"
+#include "data_structs.hpp"
+#include "module_interface.hpp"
 #include "logger.hpp"
-#include "thread_pool.h"
+#include "thread_pool.hpp"
 
 // 系统状态枚举
 enum class SystemState {

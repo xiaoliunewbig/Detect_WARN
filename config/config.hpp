@@ -4,7 +4,10 @@
 #include <string>
 #include <opencv2/opencv.hpp>
 #include <nlohmann/json.hpp>
-#include <filesystem>
+#include <string>
+#include <vector>
+#include <fstream>
+#include <iostream>
 
 using json = nlohmann::json;
 
@@ -49,7 +52,11 @@ struct CameraParams {
         j["cy"] = cy;
         
         if (!distortion.empty()) {
-            j["distortion"] = distortion.clone().reshape(1, 1);
+            std::vector<double> dist_vec;
+            if (distortion.isContinuous()) {
+                dist_vec.assign((double*)distortion.data, (double*)distortion.data + distortion.total());
+            }
+            j["distortion"] = dist_vec;
         }
         
         j["height"] = height;
@@ -98,33 +105,53 @@ struct VehicleParams {
 struct SystemConfig {
     // 视频源配置
     struct VideoSourceConfig {
-        std::string source = "0";          // 视频源路径或URL，默认使用摄像头0
-        std::string type = "camera";       // 类型: file, camera, rtsp
-        int width = 0;                     // 宽度，0表示自动
-        int height = 0;                    // 高度，0表示自动
-        int fps = 0;                       // 帧率，0表示自动
+        std::string source = "0";     // 视频源路径或摄像头ID
+        int width = 640;              // 视频宽度
+        int height = 480;             // 视频高度
+        float fps = 30.0f;            // 帧率
+        bool enable_roi = false;      // 启用ROI
+        cv::Rect roi_rect;            // ROI区域
+        bool correct_distortion = false; // 畸变矫正
+        
+        // 连接和重试配置
+        int connection_timeout_sec = 60;    // 连接超时时间（秒）
+        int retry_interval_sec = 5;         // 重试间隔（秒）
+        int max_retry_attempts = 12;        // 最大重试次数（60秒/5秒=12次）
+        bool wait_for_device = true;        // 等待设备连接
         std::string decode_mode = "cuda";  // 解码模式: cpu, cuda, vaapi
         
         // 从JSON加载
         void fromJson(const json& j) {
             if (j.contains("source")) source = j["source"];
-            if (j.contains("type")) type = j["type"];
             if (j.contains("width")) width = j["width"];
             if (j.contains("height")) height = j["height"];
             if (j.contains("fps")) fps = j["fps"];
-            if (j.contains("decode_mode")) decode_mode = j["decode_mode"];
+            if (j.contains("enable_roi")) enable_roi = j["enable_roi"];
+            if (j.contains("correct_distortion")) correct_distortion = j["correct_distortion"];
+            
+            // 连接配置
+            if (j.contains("connection_timeout_sec")) connection_timeout_sec = j["connection_timeout_sec"];
+            if (j.contains("retry_interval_sec")) retry_interval_sec = j["retry_interval_sec"];
+            if (j.contains("max_retry_attempts")) max_retry_attempts = j["max_retry_attempts"];
+            if (j.contains("wait_for_device")) wait_for_device = j["wait_for_device"];
         }
         
         // 转换为JSON
         json toJson() const {
-            return {
-                {"source", source},
-                {"type", type},
-                {"width", width},
-                {"height", height},
-                {"fps", fps},
-                {"decode_mode", decode_mode}
-            };
+            json j;
+            j["source"] = source;
+            j["width"] = width;
+            j["height"] = height;
+            j["fps"] = fps;
+            j["enable_roi"] = enable_roi;
+            j["correct_distortion"] = correct_distortion;
+            
+            // 连接配置
+            j["connection_timeout_sec"] = connection_timeout_sec;
+            j["retry_interval_sec"] = retry_interval_sec;
+            j["max_retry_attempts"] = max_retry_attempts;
+            j["wait_for_device"] = wait_for_device;
+            return j;
         }
     } video;
     
