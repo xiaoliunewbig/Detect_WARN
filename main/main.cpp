@@ -4,10 +4,13 @@
  * name: pengchengkang
  */
 
-#include "vehicle_perception_system.h"
-#include "config.h"
+#include "vehicle_perception_system.hpp"
+#include "config.hpp"
 #include <iostream>
 #include <signal.h>
+#include <iomanip>
+#include <thread>
+#include <chrono>
 #include <filesystem>
 
 // 全局系统实例指针

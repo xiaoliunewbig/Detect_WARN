@@ -1,0 +1,79 @@
+{
+  "video": {
+    "source": "0",
+    "width": 640,
+    "height": 480,
+    "fps": 30.0,
+    "enable_roi": false,
+    "correct_distortion": false,
+    "connection_timeout_sec": 60,
+    "retry_interval_sec": 5,
+    "max_retry_attempts": 12,
+    "wait_for_device": true
+  },
+  "detector": {
+    "model_path": "models/yolov8n.onnx",
+    "model_type": "yolov8",
+    "input_width": 640,
+    "input_height": 640,
+    "confidence_threshold": 0.5,
+    "nms_threshold": 0.45,
+    "precision": "fp32",
+    "calibration_path": "data/calibration"
+  },
+  "tracker": {
+    "type": "simple",
+    "max_age": 30,
+    "min_hits": 3,
+    "iou_threshold": 0.3,
+    "use_appearance": false,
+    "reid_model_path": "models/reid.onnx"
+  },
+  "behavior": {
+    "high_risk_distance": 10.0,
+    "collision_risk_ttc": 3.0,
+    "trajectory_history_length": 30,
+    "pedestrian_running_threshold": 2.5,
+    "non_motor_speeding_threshold": 5.0
+  },
+  "llm": {
+    "enable": false,
+    "type": "api",
+    "server_address": "http://localhost:8000",
+    "analysis_interval": 10,
+    "max_tokens": 100,
+    "temperature": 0.3
+  },
+  "output": {
+    "save_video": true,
+    "video_path": "output/videos/",
+    "save_results": true,
+    "results_path": "output/results/",
+    "draw_bboxes": true,
+    "draw_trails": true,
+    "draw_labels": true,
+    "log_to_file": true,
+    "log_path": "logs/",
+    "log_level": 2
+  },
+  "camera": {
+    "fx": 640.0,
+    "fy": 640.0,
+    "cx": 320.0,
+    "cy": 240.0,
+    "distortion": [0.0, 0.0, 0.0, 0.0, 0.0],
+    "height": 1.5,
+    "pitch": 0.0,
+    "yaw": 0.0,
+    "fov_h": 60.0,
+    "fov_v": 45.0
+  },
+  "vehicle": {
+    "width": 1.8,
+    "length": 4.5,
+    "height": 1.5,
+    "front_overhang": 0.9,
+    "wheelbase": 2.7,
+    "max_speed": 120.0
+  }
+}

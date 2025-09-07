@@ -5,7 +5,8 @@
 #include <memory>
 #include <functional>
 #include <opencv2/opencv.hpp>
-#include "data_structures.h"
+#include "data_structs.hpp"
+#include "config.hpp"
 
 // 视频处理器接口
 class IVideoProcessor {
@@ -27,8 +28,11 @@ public:
     
     virtual ~IVideoProcessor() = default;
     
+    // 静态工厂函数
+    static std::unique_ptr<IVideoProcessor> create();
+    
     // 初始化视频处理器
-    virtual bool initialize(const VideoSourceConfig& config, 
+    virtual bool initialize(const SystemConfig::VideoSourceConfig& config, 
                           const CameraParams& camera_params) = 0;
     
     // 开始处理
@@ -67,9 +71,6 @@ public:
     
     // 启用/禁用畸变矫正
     virtual void setDistortionCorrection(bool enable) = 0;
-    
-    // 创建实例
-    static std::unique_ptr<IVideoProcessor> create();
 };
 
 // 目标检测器接口
@@ -78,7 +79,7 @@ public:
     virtual ~IObjectDetector() = default;
     
     // 初始化检测器
-    virtual bool initialize(const DetectorConfig& config) = 0;
+    virtual bool initialize(const SystemConfig::DetectorConfig& config) = 0;
     
     // 检测目标
     virtual std::vector<Detection> detect(const cv::Mat& image) = 0;
@@ -108,7 +109,7 @@ public:
     virtual ~IObjectTracker() = default;
     
     // 初始化跟踪器
-    virtual bool initialize(const TrackerConfig& config) = 0;
+    virtual bool initialize(const SystemConfig::TrackerConfig& config) = 0;
     
     // 更新跟踪
     virtual std::vector<TrackedObject> update(
@@ -135,8 +136,8 @@ class IBehaviorAnalyzer {
 public:
     virtual ~IBehaviorAnalyzer() = default;
     
-    // 初始化分析器
-    virtual bool initialize(const BehaviorConfig& config,
+    // 初始化行为分析器
+    virtual bool initialize(const SystemConfig::BehaviorConfig& config,
                           const CameraParams& camera_params,
                           const VehicleParams& vehicle_params) = 0;
     
@@ -160,7 +161,7 @@ public:
     virtual ~IResultProcessor() = default;
     
     // 初始化结果处理器
-    virtual bool initialize(const OutputConfig& config) = 0;
+    virtual bool initialize(const SystemConfig::OutputConfig& config) = 0;
     
     // 处理分析结果
     virtual void process(const std::vector<BehaviorAnalysis>& results,
@@ -182,7 +183,7 @@ public:
     virtual ~ILLMEnhancer() = default;
     
     // 初始化LLM增强器
-    virtual bool initialize(const LLMConfig& config) = 0;
+    virtual bool initialize(const SystemConfig::LLMConfig& config) = 0;
     
     // 增强行为分析结果
     virtual std::vector<BehaviorAnalysis> enhanceAnalysis(
