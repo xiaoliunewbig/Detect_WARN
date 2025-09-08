@@ -92,6 +92,7 @@ endif()
 # ---------- 包含目录 ----------
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${PROJECT_SOURCE_DIR}/config          # 配置头文件
+    ${PROJECT_SOURCE_DIR}/configs         # 配置文件
     ${PROJECT_SOURCE_DIR}/data            # 数据结构定义
     ${PROJECT_SOURCE_DIR}/interface       # 模块接口定义
     ${PROJECT_SOURCE_DIR}/main            # 主程序头文件
