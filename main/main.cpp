@@ -60,7 +60,8 @@ int main(int argc, char* argv[]) {
     std::cout << "Vehicle Perception System starting..." << std::endl;
     
     // 解析命令行参数
-    std::string config_path = "configs/default.json";
+    std::filesystem::path current_path = std::filesystem::current_path();
+    std::string config_path = (current_path.parent_path() / "configs/default.json").string();
     if (argc > 1) {
         config_path = argv[1];
     }

@@ -1,16 +1,18 @@
 /**
  * @file logger.hpp
- * @brief 日志系统实现 - 提供多级别日志记录功能
+ * @brief 日志系统实现 - 提供线程安全的日志记录功能
  * @author pengchengkang
- * @date 2025-9-7
+ * @date 2025-9-8
  * 
  * 功能描述：
- * - 支持多级别日志输出（TRACE, DEBUG, INFO, WARN, ERROR, CRITICAL）
- * - 同时支持控制台和文件输出
- * - 线程安全的日志记录
- * - 自动时间戳和日志轮转
+ * - 支持多级别日志记录(TRACE/DEBUG/INFO/WARN/ERROR/CRITICAL)
+ * - 支持同时输出到控制台和文件
+ * - 提供带颜色区分的控制台输出
+ * - 支持日志文件自动创建和轮转
+ * - 线程安全的日志记录机制
+ * - 自动记录时间戳、文件名和行号
+ * - 支持格式化字符串输出
  */
-
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
@@ -22,6 +24,7 @@
 #include <chrono>
 #include <iomanip>
 #include <filesystem>
+#include <cstring>
 
 /**
  * @brief 日志级别枚举
@@ -85,11 +88,13 @@ public:
      * @brief 记录日志消息
      * @tparam Args 可变参数类型
      * @param level 日志级别
+     * @param file 调用日志的文件名
+     * @param line 调用日志的行号
      * @param format 格式化字符串
      * @param args 格式化参数
      */
     template<typename... Args>
-    void log(LogLevel level, const std::string& format, Args&&... args) {
+    void log(LogLevel level, const char* file, int line, const std::string& format, Args&&... args) {
         if (level < log_level_) return;
         
         std::lock_guard<std::mutex> lock(mutex_);
@@ -102,15 +107,34 @@ public:
         auto time_t = std::chrono::system_clock::to_time_t(now);
         auto tm = *std::localtime(&time_t);
         
+        // 获取毫秒级时间
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            now.time_since_epoch() % std::chrono::seconds(1)
+        );
+        
+        // 提取文件名（去掉路径）
+        std::string filename = getFileName(file);
+        
         // 构建完整日志消息
         std::ostringstream oss;
-        oss << "[" << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << "] "
+        oss << "[" << std::put_time(&tm, "%Y-%m-%d %H:%M:%S") << "." 
+            << std::setw(3) << std::setfill('0') << ms.count() << "] "
+            << "[" << filename << ":" << line << "] "
             << "[" << levelToString(level) << "] " << message;
         
         std::string full_message = oss.str();
         
-        // 输出到控制台
-        std::cout << full_message << std::endl;
+        // 输出到控制台，不同级别使用不同颜色
+        if (level >= LogLevel::ERROR) {
+            // 错误级别输出到cerr，并添加红色
+            std::cerr << "\033[31m" << full_message << "\033[0m" << std::endl;
+        } else if (level == LogLevel::WARN) {
+            // 警告级别添加黄色
+            std::cout << "\033[33m" << full_message << "\033[0m" << std::endl;
+        } else {
+            // 其他级别正常输出
+            std::cout << full_message << std::endl;
+        }
         
         // 输出到文件
         if (log_to_file_ && log_file_.is_open()) {
@@ -125,6 +149,27 @@ private:
         if (log_file_.is_open()) {
             log_file_.close();
         }
+    }
+    
+    // 禁止拷贝构造和赋值
+    Logger(const Logger&) = delete;
+    Logger& operator=(const Logger&) = delete;
+    
+    /**
+     * @brief 从完整路径中提取文件名
+     */
+    std::string getFileName(const char* path) {
+        if (!path) return "";
+        
+        // 处理不同操作系统的路径分隔符
+        const char* last_slash = std::strrchr(path, '/');
+        const char* last_backslash = std::strrchr(path, '\\');
+        const char* last_sep = std::max(last_slash, last_backslash);
+        
+        if (last_sep) {
+            return std::string(last_sep + 1);
+        }
+        return std::string(path);
     }
     
     template<typename... Args>
@@ -173,12 +218,12 @@ private:
     std::mutex mutex_;
 };
 
-// 便捷宏定义
-#define LOG_TRACE(...) Logger::getInstance().log(LogLevel::TRACE, __VA_ARGS__)
-#define LOG_DEBUG(...) Logger::getInstance().log(LogLevel::DEBUG, __VA_ARGS__)
-#define LOG_INFO(...) Logger::getInstance().log(LogLevel::INFO, __VA_ARGS__)
-#define LOG_WARN(...) Logger::getInstance().log(LogLevel::WARN, __VA_ARGS__)
-#define LOG_ERROR(...) Logger::getInstance().log(LogLevel::ERROR, __VA_ARGS__)
-#define LOG_CRITICAL(...) Logger::getInstance().log(LogLevel::CRITICAL, __VA_ARGS__)
+// 便捷宏定义，自动添加文件名和行号
+#define LOG_TRACE(...) Logger::getInstance().log(LogLevel::TRACE, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_DEBUG(...) Logger::getInstance().log(LogLevel::DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_INFO(...) Logger::getInstance().log(LogLevel::INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_WARN(...) Logger::getInstance().log(LogLevel::WARN, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_ERROR(...) Logger::getInstance().log(LogLevel::ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#define LOG_CRITICAL(...) Logger::getInstance().log(LogLevel::CRITICAL, __FILE__, __LINE__, __VA_ARGS__)
 
 #endif // LOGGER_HPP

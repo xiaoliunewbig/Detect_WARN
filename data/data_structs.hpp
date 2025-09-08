@@ -1,3 +1,20 @@
+/**
+ * @file data_structs.hpp
+ * @brief 定义智能驾驶系统中目标检测、跟踪和行为分析相关的数据结构
+ * @author pengchengkang
+ * @date 2025-9-6
+ * 
+ * -功能描述:
+ * 定义了智能驾驶系统中用于目标检测、跟踪和行为分析的核心数据结构，包括：
+ * 1. 目标类别枚举(ObjectClass)：定义行人、非机动车、动物等目标类型
+ * 2. 行为类型枚举(BehaviorType)：定义各类目标的行为模式
+ * 3. 风险等级枚举(RiskLevel)：定义不同级别的风险程度
+ * 4. 检测结果结构(Detection)：存储单帧目标检测结果
+ * 5. 跟踪目标结构(TrackedObject)：存储目标跟踪状态和历史轨迹
+ * 6. 行为分析结构(BehaviorAnalysis)：存储目标行为分析和风险评估结果
+ * 7. 性能统计结构(DetectionPerformance)：统计检测系统性能指标
+ * 所有结构均支持JSON序列化，便于数据传输和存储
+ */
 #ifndef DATA_STRUCTURES_HPP
 #define DATA_STRUCTURES_HPP
 
